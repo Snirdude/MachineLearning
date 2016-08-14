@@ -91,46 +91,57 @@ lamda = 0.01
 tao = 0.001
 m = 520
 n = 100
-beta1 = np.random.rand(520, 1)
-beta2 = np.random.rand(520, 1)
 
 X = pd.read_csv('trainingData.csv', usecols=range(0, 520))
 y1 = pd.read_csv('trainingData.csv', usecols=range(520, 521))
 y2 = pd.read_csv('trainingData.csv', usecols=range(521, 522))
 
 featureScalingAndNormalization(X, n, m)
-Jvalue = computeJbeta(X.values, beta1, y1.values, n, m, lamda)
-J1.append(Jvalue)
-Jvalue = computeJbeta(X.values, beta2, y2.values, n, m, lamda)
-J2.append(Jvalue)
-
-# while abs(Jvalue - J[len(J) - 1]) > epsilon:   # until converge calculate gradient descent
-
-for i in range(20):
-    beta1 = gradientDescent(X.values, beta1, y1.values, n, m, lamda, tao)
-    beta2 = gradientDescent(X.values, beta2, y2.values, n, m, lamda, tao)
-    G1.append(gradientVectorL1Norm(X.values, beta1, y1.values, n, m, lamda))
-    G2.append(gradientVectorL1Norm(X.values, beta2, y2.values, n, m, lamda))
+vectorEx5 = []
+vectorEx6 = []
+for k in range(5):
+    print(str(k))
+    J1 = []
+    J2 = []
+    beta1 = np.random.rand(520, 1)
+    beta2 = np.random.rand(520, 1)
     Jvalue = computeJbeta(X.values, beta1, y1.values, n, m, lamda)
-    J1.append(Jvalue[0][0])
-    print(i, Jvalue)
+    J1.append(Jvalue)
     Jvalue = computeJbeta(X.values, beta2, y2.values, n, m, lamda)
-    J2.append(Jvalue[0][0])
+    J2.append(Jvalue)
 
-print('Rsquare for first target for training = ', str(Rsquare(X.values, beta1, y1.values, n)))
-print('Rsquare for second target for training = ', str(Rsquare(X.values, beta2, y2.values, n)))
+    # while abs(Jvalue - J[len(J) - 1]) > epsilon:   # until converge calculate gradient descent
 
-X = pd.read_csv('validationData.csv', usecols=range(0, 520))
-y1 = pd.read_csv('validationData.csv', usecols=range(520, 521))
-y2 = pd.read_csv('validationData.csv', usecols=range(521, 522))
+    for i in range(20):
+        beta1 = gradientDescent(X.values, beta1, y1.values, n, m, lamda, tao)
+        beta2 = gradientDescent(X.values, beta2, y2.values, n, m, lamda, tao)
+        G1.append(gradientVectorL1Norm(X.values, beta1, y1.values, n, m, lamda))
+        G2.append(gradientVectorL1Norm(X.values, beta2, y2.values, n, m, lamda))
+        Jvalue = computeJbeta(X.values, beta1, y1.values, n, m, lamda)
+        J1.append(Jvalue[0][0])
+        print(i, Jvalue)
+        Jvalue = computeJbeta(X.values, beta2, y2.values, n, m, lamda)
+        J2.append(Jvalue[0][0])
 
-featureScalingAndNormalization(X, n, m)
+    print('Rsquare for training = ', str((Rsquare(X.values, beta1, y1.values, n) +
+                                          Rsquare(X.values, beta2, y2.values, n)) / 2))
 
-print('Rsquare for first target for validation = ', str(Rsquare(X.values, beta1, y1.values, n)))
-print('Rsquare for second target for validation = ', str(Rsquare(X.values, beta2, y2.values, n)))
+    X = pd.read_csv('validationData.csv', usecols=range(0, 520))
+    y1 = pd.read_csv('validationData.csv', usecols=range(520, 521))
+    y2 = pd.read_csv('validationData.csv', usecols=range(521, 522))
 
-plt.plot(J1)
-plt.plot(J2)
-plt.plot(G1)
-plt.plot(G2)
+    featureScalingAndNormalization(X, n, m)
+
+    vectorEx6.append((Rsquare(X.values, beta1, y1.values, n) + Rsquare(X.values, beta2, y2.values, n)) / 2)
+    print('Rsquare for validation = ', str(vectorEx6[len(vectorEx6) - 1]))
+
+    count = 0
+    for i in range(m):
+        if beta1[i] < 0.001:
+            count += 1
+
+    vectorEx5.append(count)
+    lamda *= 10
+
+plt.plot(vectorEx6)
 plt.show()
