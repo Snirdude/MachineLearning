@@ -4,14 +4,23 @@ import numpy as np
 from math import log
 
 def sigmoid(x):
-    return (1 / (1 + pow(np.e, -x)))
+    if any(y > 100 for y in x):
+        return 1
+    elif any(y < -100 for y in x):
+        return 0.000001
+    else:
+        calc = 1 / (1 + np.exp(-x))
+        return calc
 
 # function J beta with regularization
 def computeLw(X, w, numOfExamples):
     likelihood = 0
 
     for t in range(numOfExamples):
-        likelihood += log(sigmoid(w.T.dot(X[t])))
+        currentElement = sigmoid(w.T.dot(X[t]))
+        likelihood += log(currentElement)
+
+    likelihood /= numOfExamples
 
     return likelihood
 
@@ -19,27 +28,20 @@ def computeLw(X, w, numOfExamples):
 def gradientAscent(X, w, y, numOfExamples, numOfFeatures, i_Tao):
     wUpdated = w.copy()
 
-    for j in range(numOfFeatures):
-        likelihood = 0
-        for t in range(numOfExamples):
-            calc = sigmoid(w.T.dot(X[t]))
-            likelihood += (y[t] - calc) * X[t][j]
-            print("current y[t] is ", y[t])
-            print("sigmoid calculation is: ", calc)
-
-        likelihood /= numOfExamples
-        wUpdated[j] = w[j] + i_Tao * likelihood
+    wUpdated = X.T.dot(y - sigmoid(X.dot(w)))
 
     return wUpdated
 
 
 L = [] # stands for the calculated values of L for w/y
-tao = 0.01
+tao = 0.000001
 m = 784
-n = 200
-wVec = np.random.rand(784, 1)
-
+n = 12665
+wVec = np.random.normal(0, 1, [784, 1])
 trX, teX, trY, teY = mnist(onehot=True)
+x = np.array(trX[0, :])
+x = x.reshape([28, 28])
+#plt.imshow(x)
 
 # binary classification
 idtr0 = np.where(np.dot(trY, [1, 0, 0, 0, 0, 0, 0, 0, 0, 0]) == 1)

@@ -1,6 +1,8 @@
 __author__ = 'abekker'
 from load import mnist
 import numpy as np
+from matplotlib import pyplot as plt
+
 trX, teX, trY, teY = mnist(onehot=True)
 
 # binary classification
