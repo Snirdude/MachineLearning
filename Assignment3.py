@@ -3,6 +3,8 @@ from load import mnist
 import numpy as np
 from math import log
 
+# updated in 21/8
+
 def sigmoid(x):
     if any(y > 100 for y in x):
         return 1
