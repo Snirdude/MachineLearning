@@ -2,9 +2,9 @@ import numpy as np
 import os
 import os.path
 
-datasets_dir = "C:/Users/Yossi/PycharmProjects/MachineLearning/media/datasets/"
+datasets_dir = "media/datasets/"
 
-def one_hot(x,n):
+def one_hot(x, n):
 	if type(x) == list:
 		x = np.array(x)
 	x = x.flatten()

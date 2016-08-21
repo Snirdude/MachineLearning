@@ -30,7 +30,8 @@ def computeLw(X, w, numOfExamples):
 def gradientAscent(X, w, y, numOfExamples, numOfFeatures, i_Tao):
     wUpdated = w.copy()
 
-    wUpdated = X.T.dot(y - sigmoid(X.dot(w)))
+    derivative = X.T.dot(y - sigmoid(X.dot(w)))
+    wUpdated = w + i_Tao * derivative
 
     return wUpdated
 
