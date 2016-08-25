@@ -1,50 +1,27 @@
 from matplotlib import pyplot as plt
 from load import mnist
 import numpy as np
-from math import log
+from scipy.special import expit
 
 # updated in 21/8
 
-def sigmoid(x):
-    if any(y > 100 for y in x):
-        return 1
-    elif any(y < -100 for y in x):
-        return 0.000001
-    else:
-        calc = 1 / (1 + np.exp(-x))
-        return calc
+# function L(w)
+def computeLw(X, w):
+    return np.sum(np.log(expit(np.dot(X, w)))) / np.size(X, 0)
 
-# function J beta with regularization
-def computeLw(X, w, numOfExamples):
-    likelihood = 0
-
-    for t in range(numOfExamples):
-        currentElement = sigmoid(w.T.dot(X[t]))
-        likelihood += log(currentElement)
-
-    likelihood /= numOfExamples
-
-    return likelihood
-
-# change vector beta simultaneously with gradient ascent
-def gradientAscent(X, w, y, numOfExamples, numOfFeatures, i_Tao):
-    wUpdated = w.copy()
-
-    derivative = X.T.dot(y - sigmoid(X.dot(w)))
-    wUpdated = w + i_Tao * derivative
-
-    return wUpdated
+# adjust vector w with gradient ascent
+def gradientAscent(X, w, y, i_Tao):
+    derivative = np.dot(X.T, (y - expit(np.dot(X, w)))) / np.size(X, 0)
+    return w + i_Tao * derivative
 
 
 L = [] # stands for the calculated values of L for w/y
-tao = 0.000001
+tao = 0.01
+eps = 0.0001
 m = 784
 n = 12665
 wVec = np.random.normal(0, 1, [784, 1])
 trX, teX, trY, teY = mnist(onehot=True)
-x = np.array(trX[0, :])
-x = x.reshape([28, 28])
-#plt.imshow(x)
 
 # binary classification
 idtr0 = np.where(np.dot(trY, [1, 0, 0, 0, 0, 0, 0, 0, 0, 0]) == 1)
@@ -66,16 +43,17 @@ teY = teY[idteF]
 teY = np.dot(teY, [0, 1, 0, 0, 0, 0, 0, 0, 0, 0])
 teY = np.transpose(teY)
 
-Lvalue = computeLw(trX, wVec, n)
+Lvalue = computeLw(trX, wVec)
 L.append(Lvalue)
 
-# while abs(Jvalue - J[len(J) - 1]) > epsilon:   # until converge calculate gradient descent
-
-for i in range(20):
-    print(Lvalue)
-    wVec = gradientAscent(trX, wVec, trY, n, m, tao)
-    Lvalue = computeLw(trX, wVec, n)
+for i in range(1000):
+    wVec = gradientAscent(trX, wVec, trY, tao)
+    Lvalue = computeLw(trX, wVec)
     L.append(Lvalue)
 
 plt.plot(L)
 plt.show()
+
+yEstimate = expit(np.dot(wVec.T, teX.T).T)
+yEstimate = np.where(yEstimate > 0.5, 1, 0)
+print((yEstimate == teY).sum() * 100 / np.size(teY))
