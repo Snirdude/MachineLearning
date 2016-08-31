@@ -1,6 +1,7 @@
 from matplotlib import pyplot as plt
 from load import mnist
 import numpy as np
+#
 
 numOfClasses = 10
 
