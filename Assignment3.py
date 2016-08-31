@@ -6,8 +6,8 @@ from scipy.special import expit
 # updated in 21/8
 
 # function L(w)
-def computeLw(X, w):
-    return np.sum(np.log(expit(np.dot(X, w)))) / np.size(X, 0)
+def computeLw(X, w, y):
+    return np.sum(np.log(y * expit(np.dot(X, w)) + (1 - y) * expit(1 - np.dot(X, w)))) / np.size(X, 0)
 
 # adjust vector w with gradient ascent
 def gradientAscent(X, w, y, i_Tao):
@@ -43,12 +43,12 @@ teY = teY[idteF]
 teY = np.dot(teY, [0, 1, 0, 0, 0, 0, 0, 0, 0, 0])
 teY = np.transpose(teY)
 
-Lvalue = computeLw(trX, wVec)
+Lvalue = computeLw(trX, wVec, trY)
 L.append(Lvalue)
 
 for i in range(1000):
     wVec = gradientAscent(trX, wVec, trY, tao)
-    Lvalue = computeLw(trX, wVec)
+    Lvalue = computeLw(trX, wVec, trY)
     L.append(Lvalue)
 
 plt.plot(L)
