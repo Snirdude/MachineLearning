@@ -6,41 +6,71 @@ from matplotlib import pyplot as plt
 k_NumOfTrainingDataCells = 8
 k_NumOfTestDataCells = 3
 
-# TODO: mession number 5
-def Calculate_K_Projection():
-    # do it bitch
+def Calculate_K_Projection(i_TestData):
+    return PCA_New(i_TestData)
 
-# TODO: mession number 6
-def CalculateAllEquals(i_TrainData, i_TestData):
+# TODO: finish mession number 6
+def CalculateAllEquals(i_TrainData, i_TestData, i_SamplesNumber):
     from scipy.spatial import distance
 
-# TODO: mession number 4
+    locationInTest = 0
+    locationInTrain = 0
+    k_MaxDistance = 0.5
+    indexes = []
+
+    for currentSampleIndex in range(i_SamplesNumber):
+        for i in range(k_NumOfTrainingDataCells):   # for each train in collection of 8
+            for j in range(k_NumOfTestDataCells):   # compare each test in collection of 3
+                callculatedDistance = distance.euclidean(i_TrainData[i + locationInTrain], i_TestData[locationInTest + j])
+                print(callculatedDistance)
+                if callculatedDistance <= k_MaxDistance:
+                    indexes.append([i + locationInTrain, locationInTest + j])
+        locationInTest += k_NumOfTestDataCells
+        locationInTrain += k_NumOfTrainingDataCells
+
+    return indexes
+
+# TODO: finish mession number 4
 def ComparePCAs(X):
-    from matplotlib.mlab import PCA
+    # from matplotlib.mlab import PCA
+    from sklearn.decomposition import PCA
+    from scipy.spatial import distance
+    print(X.shape)
+    pcaObj = PCA(n_components=2)
+    pcaObj.fit(X)
+    xProjectionByPython = pcaObj.get_precision()
+    print(xProjectionByPython.shape)
+    xProjectionByUs = PCA_New(X, 0.9)
+    print(xProjectionByUs[0].shape)
+    # return distance.euclidean(xProjectionByPython, xProjectionByUs)
 
 def SpiltDataToTrainingAndTest(X):
-    train = []
-    test = []
+    """
+    :param X:
+    :return:
+    """
     numOfDataCells = int(np.size(X, 0) / (k_NumOfTrainingDataCells + k_NumOfTestDataCells)) # get the num of personnels
     compressedData = np.split(X, numOfDataCells)  # split the data to personnel
-
+    train = []
+    test = []
     for i in range(numOfDataCells):
         currentLocationInRow = 0
-        trainList = []
-        testList = []
 
         while currentLocationInRow < 8:
-            trainList.append(compressedData[i][currentLocationInRow])
+            train.append(compressedData[i][currentLocationInRow])
             currentLocationInRow += 1
-        train.append(trainList)
         while currentLocationInRow < 11:
-            testList.append(compressedData[i][currentLocationInRow])
+            test.append(compressedData[i][currentLocationInRow])
             currentLocationInRow += 1
-        test.append(testList)
 
     return train, test
 
 def PCA_New(X, Threshold):
+    """
+    :param X: the data matrix
+    :param Threshold: define the total percentage of data to save
+    :return: the X' matrix and the mean face as tuple
+    """
     X = X - np.mean(X)
     CovX = np.dot(X.T, X) / np.size(X, 0)
     eigenValues, eigenVectors = np.linalg.eig(CovX)
@@ -55,16 +85,19 @@ def PCA_New(X, Threshold):
         k += 1
 
     A = eigenVectors[:, 0:k]
-    return np.dot(X, A) # maybe return only the k
+
+    return np.dot(X, A), eigenVectors[0]
 
 facesData = MathLoader.loadmat('facesData')
 trainX, testX = SpiltDataToTrainingAndTest(facesData['faces'])
 Y = facesData['labeles']
-print(Y.shape)
 
-# plt.imshow(testX[0][0].reshape((32,32)).T)
+X_projected, meanFace = PCA_New(facesData['faces'], 0.9)    # calculate PCA on the data
+k = X_projected.shape[1]                                    # get the K dimensions of the data after PCA algorithm
+
+indexes = CalculateAllEquals(trainX, testX, 15)
+print(indexes)
+
+# plt.imshow(meanFace.real.reshape(32, 32).T)
 # plt.gray()
 # plt.show()
-
-
-
