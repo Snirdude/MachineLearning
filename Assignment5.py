@@ -1,6 +1,5 @@
 import numpy as np
 import scipy.io as MathLoader
-
 from matplotlib import pyplot as plt
 
 k_NumOfTrainingDataCells = 8
@@ -18,11 +17,10 @@ def CalculateAllEquals(i_TrainData, i_TestData, i_SamplesNumber):
     k_MaxDistance = 0.5
     indexes = []
 
-    for currentSampleIndex in range(i_SamplesNumber):
+    for currentSampleIndex in range(i_SamplesNumber):  # iterate throw all the data
         for i in range(k_NumOfTrainingDataCells):   # for each train in collection of 8
             for j in range(k_NumOfTestDataCells):   # compare each test in collection of 3
-                callculatedDistance = distance.euclidean(i_TrainData[i + locationInTrain], i_TestData[locationInTest + j])
-                print(callculatedDistance)
+                callculatedDistance = distance.euclidean(i_TrainData[i + locationInTrain], i_TestData[locationInTest + j])  # check difference between the pictures
                 if callculatedDistance <= k_MaxDistance:
                     indexes.append([i + locationInTrain, locationInTest + j])
         locationInTest += k_NumOfTestDataCells
@@ -31,18 +29,31 @@ def CalculateAllEquals(i_TrainData, i_TestData, i_SamplesNumber):
     return indexes
 
 # TODO: finish mession number 4
-def ComparePCAs(X):
-    # from matplotlib.mlab import PCA
+# 2 options: compare the X' matrices or the projection matrices
+#using sklearn.decomposition.PCA
+def ComparePCAs1(X):
     from sklearn.decomposition import PCA
     from scipy.spatial import distance
-    print(X.shape)
-    pcaObj = PCA(n_components=2)
+
+    pcaObj = PCA(n_components=0.9)
     pcaObj.fit(X)
-    xProjectionByPython = pcaObj.get_precision()
-    print(xProjectionByPython.shape)
-    xProjectionByUs = PCA_New(X, 0.9)
-    print(xProjectionByUs[0].shape)
-    # return distance.euclidean(xProjectionByPython, xProjectionByUs)
+    xTagByPython = pcaObj.transform(X)
+    xTagByUs, meanFace = PCA_New(X, 0.9)
+
+    print(xTagByUs.shape)
+    print(xTagByPython.shape)
+    return np.abs(np.subtract(xTagByUs, xTagByPython))
+
+# using matplotlib.mlab.PCA
+def ComparePCAs2(X):
+    from matplotlib.mlab import PCA
+    from scipy.spatial import distance
+
+    pcaObj = PCA(X)
+    xTagByPython = pcaObj.project()
+    xTagByUs, meanFace = PCA_New(X, 0.9)
+
+    return np.abs(np.subtract(xTagByUs, xTagByPython))
 
 def SpiltDataToTrainingAndTest(X):
     """
@@ -92,11 +103,13 @@ facesData = MathLoader.loadmat('facesData')
 trainX, testX = SpiltDataToTrainingAndTest(facesData['faces'])
 Y = facesData['labeles']
 
-X_projected, meanFace = PCA_New(facesData['faces'], 0.9)    # calculate PCA on the data
-k = X_projected.shape[1]                                    # get the K dimensions of the data after PCA algorithm
+# X_projected, meanFace = PCA_New(facesData['faces'], 0.9)    # calculate PCA on the data
+# k = X_projected.shape[1]                                    # get the K dimensions of the data after PCA algorithm
 
-indexes = CalculateAllEquals(trainX, testX, 15)
-print(indexes)
+print(ComparePCAs1(facesData['faces']))
+
+# indexes = CalculateAllEquals(trainX, testX, 15)
+# print(indexes)
 
 # plt.imshow(meanFace.real.reshape(32, 32).T)
 # plt.gray()
