@@ -1,61 +1,40 @@
 import numpy as np
 import scipy.io as MathLoader
 from matplotlib import pyplot as plt
+from scipy.spatial import distance
+from sklearn.decomposition import PCA
 
 k_NumOfTrainingDataCells = 8
 k_NumOfTestDataCells = 3
 
-def Calculate_K_Projection(i_TestData):
-    return PCA_New(i_TestData)
+def GetMeanFace(i_TestData):
+    return i_TestData[0]
 
-# TODO: finish mession number 6
-def CalculateAllEquals(i_TrainData, i_TestData, i_SamplesNumber):
+def CalculateAllEquals(trainX, testX):
     from scipy.spatial import distance
 
-    locationInTest = 0
-    locationInTrain = 0
-    k_MaxDistance = 0.5
-    indexes = []
+    List = []
+    for i in range(np.size(testX, 0)):
+        Min = np.inf
+        idx = -1
+        for j in range(np.size(trainX, 0)):
+            if distance.euclidean(testX[i], trainX[j]) < Min:
+                Min = distance.euclidean(testX[i], trainX[j])
+                idx = j
+                # print(int(idx / 8) + 1)
+        List.append(int(idx / 8) + 1)
 
-    for currentSampleIndex in range(i_SamplesNumber):  # iterate throw all the data
-        for i in range(k_NumOfTrainingDataCells):   # for each train in collection of 8
-            for j in range(k_NumOfTestDataCells):   # compare each test in collection of 3
-                callculatedDistance = distance.euclidean(i_TrainData[i + locationInTrain], i_TestData[locationInTest + j])  # check difference between the pictures
-                if callculatedDistance <= k_MaxDistance:
-                    indexes.append([i + locationInTrain, locationInTest + j])
-        locationInTest += k_NumOfTestDataCells
-        locationInTrain += k_NumOfTrainingDataCells
-
-    return indexes
+    return List
 
 # TODO: finish mession number 4
-# 2 options: compare the X' matrices or the projection matrices
-#using sklearn.decomposition.PCA
-def ComparePCAs1(X):
-    from sklearn.decomposition import PCA
-    from scipy.spatial import distance
+def PyhtonPCA(X):
+    """
+    :param X: The data matrix
+    :return: new data matrix with fewer features
+    """
+    return PCA(n_components=0.9).fit_transform(X)
 
-    pcaObj = PCA(n_components=0.9)
-    pcaObj.fit(X)
-    xTagByPython = pcaObj.transform(X)
-    xTagByUs, meanFace = PCA_New(X, 0.9)
-
-    print(xTagByUs.shape)
-    print(xTagByPython.shape)
-    return np.abs(np.subtract(xTagByUs, xTagByPython))
-
-# using matplotlib.mlab.PCA
-def ComparePCAs2(X):
-    from matplotlib.mlab import PCA
-    from scipy.spatial import distance
-
-    pcaObj = PCA(X)
-    xTagByPython = pcaObj.project()
-    xTagByUs, meanFace = PCA_New(X, 0.9)
-
-    return np.abs(np.subtract(xTagByUs, xTagByPython))
-
-def SpiltDataToTrainingAndTest(X):
+def SplitDataToTrainingAndTest(X):
     """
     :param X:
     :return:
@@ -76,14 +55,27 @@ def SpiltDataToTrainingAndTest(X):
 
     return train, test
 
+def SplitLabelsToTrainingAndTest(Y):
+    numOfDataCells = int(np.size(Y, 0) / (k_NumOfTrainingDataCells + k_NumOfTestDataCells))  # get the num of personnels
+    train = []
+    test = []
+    for i in range(numOfDataCells):
+
+        for j in range(8):
+            train.append(Y[i * 11 + j][0])
+        for j in range(8, 11):
+            test.append(Y[i * 11 + j][0])
+
+    return train, test
+
 def PCA_New(X, Threshold):
     """
     :param X: the data matrix
     :param Threshold: define the total percentage of data to save
     :return: the X' matrix and the mean face as tuple
     """
-    X = X - np.mean(X)
-    CovX = np.dot(X.T, X) / np.size(X, 0)
+    newX = X.copy() - np.mean(X)
+    CovX = np.dot(newX.T, newX) / np.size(newX, 0)
     eigenValues, eigenVectors = np.linalg.eig(CovX)
     idx = eigenValues.argsort()[::-1]
     eigenValues = eigenValues[idx]
@@ -95,22 +87,17 @@ def PCA_New(X, Threshold):
         accumulatedEigenValues.append(eigenValues[k])
         k += 1
 
-    A = eigenVectors[:, 0:k]
-
-    return np.dot(X, A), eigenVectors[0]
+    return eigenVectors[:, 0:k]
 
 facesData = MathLoader.loadmat('facesData')
-trainX, testX = SpiltDataToTrainingAndTest(facesData['faces'])
+X = np.dot(facesData['faces'], PCA_New(facesData['faces'], 0.9))    # calculate X'
+trainX, testX = SplitDataToTrainingAndTest(X)
 Y = facesData['labeles']
+trainY, testY = SplitLabelsToTrainingAndTest(Y)
 
-# X_projected, meanFace = PCA_New(facesData['faces'], 0.9)    # calculate PCA on the data
-# k = X_projected.shape[1]                                    # get the K dimensions of the data after PCA algorithm
-
-print(ComparePCAs1(facesData['faces']))
-
-# indexes = CalculateAllEquals(trainX, testX, 15)
-# print(indexes)
-
-# plt.imshow(meanFace.real.reshape(32, 32).T)
-# plt.gray()
-# plt.show()
+List = CalculateAllEquals(trainX=trainX, testX=testX)
+X = PyhtonPCA(facesData['faces'])
+trainX, testX = SplitDataToTrainingAndTest(X)
+PythonList = CalculateAllEquals(trainX=trainX, testX=testX)
+print("Success rate for face recognition with our PCA: ", len([i for i, j in zip(List, testY) if i == j]) * 100 / np.size(testY))
+print("Success rate for face recognition with Python PCA: ", len([i for i, j in zip(PythonList, testY) if i == j]) * 100 / np.size(testY))
