@@ -11,6 +11,11 @@ def GetMeanFace(i_TestData):
     return i_TestData[0]
 
 def CalculateAllEquals(trainX, testX):
+    """
+    :param trainX: train data
+    :param testX: test data
+    :return: index array of the faces that was recognized
+    """
     from scipy.spatial import distance
 
     List = []
@@ -21,12 +26,11 @@ def CalculateAllEquals(trainX, testX):
             if distance.euclidean(testX[i], trainX[j]) < Min:
                 Min = distance.euclidean(testX[i], trainX[j])
                 idx = j
-                # print(int(idx / 8) + 1)
         List.append(int(idx / 8) + 1)
 
     return List
 
-# TODO: finish mession number 4
+# TODO: finish mission number 4
 def PyhtonPCA(X):
     """
     :param X: The data matrix
@@ -36,8 +40,8 @@ def PyhtonPCA(X):
 
 def SplitDataToTrainingAndTest(X):
     """
-    :param X:
-    :return:
+    :param X: data array
+    :return: train array and test array
     """
     numOfDataCells = int(np.size(X, 0) / (k_NumOfTrainingDataCells + k_NumOfTestDataCells)) # get the num of personnels
     compressedData = np.split(X, numOfDataCells)  # split the data to personnel
@@ -56,6 +60,10 @@ def SplitDataToTrainingAndTest(X):
     return train, test
 
 def SplitLabelsToTrainingAndTest(Y):
+    """
+    :param Y: labels array
+    :return: train array and test array
+    """
     numOfDataCells = int(np.size(Y, 0) / (k_NumOfTrainingDataCells + k_NumOfTestDataCells))  # get the num of personnels
     train = []
     test = []
@@ -72,7 +80,7 @@ def PCA_New(X, Threshold):
     """
     :param X: the data matrix
     :param Threshold: define the total percentage of data to save
-    :return: the X' matrix and the mean face as tuple
+    :return: the projection matrix that fit to the given X matrix data
     """
     newX = X.copy() - np.mean(X)
     CovX = np.dot(newX.T, newX) / np.size(newX, 0)
@@ -99,5 +107,6 @@ List = CalculateAllEquals(trainX=trainX, testX=testX)
 X = PyhtonPCA(facesData['faces'])
 trainX, testX = SplitDataToTrainingAndTest(X)
 PythonList = CalculateAllEquals(trainX=trainX, testX=testX)
+
 print("Success rate for face recognition with our PCA: ", len([i for i, j in zip(List, testY) if i == j]) * 100 / np.size(testY))
 print("Success rate for face recognition with Python PCA: ", len([i for i, j in zip(PythonList, testY) if i == j]) * 100 / np.size(testY))
