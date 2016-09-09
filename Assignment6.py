@@ -5,7 +5,6 @@ from scipy.spatial import distance
 
 K = 10
 
-# TODO:
 def RandomlyClassifyData(X):
     C = list(range(10))
 
@@ -14,7 +13,7 @@ def RandomlyClassifyData(X):
 
     j = 0
     for i in range(np.size(X, 0)):
-        C[j]['points'].append(X[i])
+        C[j]['points'].append(X[i].tolist())
         j += 1
         j %= K
 
@@ -25,18 +24,17 @@ def RandomlyClassifyData(X):
 
 def findGivenVectorInAllCentroid(C, vectorToLookFor):
     indexToReturn = -1
-    j = 0
 
-    while j < K:
+    for j in range(K):
         if vectorToLookFor in C[j]['points']:
             indexToReturn = j
             break
 
     return indexToReturn
 
-# TODO:
 def Kmeans(X):
-    k_MaxAllowdExchanges = 20
+    k_MaxAllowdExchanges = int(np.size(X, 0) * 0.03)
+    print(int(np.size(X, 0) * 0.05))
     C = RandomlyClassifyData(X)
     costFunctionValues = []
     numOfExchanges = np.inf
@@ -51,12 +49,12 @@ def Kmeans(X):
                 distances.append(distance.euclidean(X[i], C[j]['mean']))
 
             rightCentroidNumber = np.argmin(distances)
-            wrongCentroidNumber = findGivenVectorInAllCentroid(C, X[i])
+            wrongCentroidNumber = findGivenVectorInAllCentroid(C, X[i].tolist())
 
             if rightCentroidNumber != wrongCentroidNumber:
                 numOfExchanges += 1
-                C[wrongCentroidNumber]['points'].remove(X[i])
-                C[rightCentroidNumber]['points'].append(X[i])
+                C[wrongCentroidNumber]['points'].remove(X[i].tolist())
+                C[rightCentroidNumber]['points'].append(X[i].tolist())
 
             distances.clear()
 
@@ -68,18 +66,18 @@ def Kmeans(X):
 
     return C, costFunctionValues
 
-# TODO:
 def CostFunction(C):
     sum = 0
     for j in range(K):
         for i in range(np.size(C[j]['points'], 0)):
             sum += distance.euclidean(C[j]['points'][i], C[j]['mean'])
 
-    print(sum)
     return sum
 
 trX, teX, trY, teY = mnist(ntrain=60000, ntest=10000, onehot=True)
-C, CostFunctionValues = Kmeans(trX)
+C, CostFunctionValues = Kmeans(trX[0:5000])
 plt.plot(CostFunctionValues)
 plt.show()
-#centroids, costFunctionValues = Kmeans(trX, k_NumOfSamples)
+for j in range(K):
+    plt.imshow(C[j]['mean'].reshape((28, 28)))
+    plt.show()
