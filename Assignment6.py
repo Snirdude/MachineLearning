@@ -2,7 +2,8 @@ from matplotlib import pyplot as plt
 from load import mnist
 import numpy as np
 from scipy.spatial import distance
-
+from collections import Counter
+from sklearn.cluster import KMeans
 K = 10
 
 def RandomlyClassifyData(X):
@@ -33,8 +34,7 @@ def findGivenVectorInAllCentroid(C, vectorToLookFor):
     return indexToReturn
 
 def Kmeans(X):
-    k_MaxAllowdExchanges = int(np.size(X, 0) * 0.03)
-    print(int(np.size(X, 0) * 0.05))
+    k_MaxAllowdExchanges = int(np.size(X, 0) * 0.02)
     C = RandomlyClassifyData(X)
     costFunctionValues = []
     numOfExchanges = np.inf
@@ -74,10 +74,41 @@ def CostFunction(C):
 
     return sum
 
-trX, teX, trY, teY = mnist(ntrain=60000, ntest=10000, onehot=True)
-C, CostFunctionValues = Kmeans(trX[0:5000])
-plt.plot(CostFunctionValues)
-plt.show()
-for j in range(K):
-    plt.imshow(C[j]['mean'].reshape((28, 28)))
-    plt.show()
+def successRate(C, X, Y):
+    Labels = list(range(10))
+    for j in range(K):
+        Labels[j] = []
+
+    for i in range(np.size(X, 0)):
+        for j in range(K):
+            if X[i].tolist() in C[j]['points']:
+                Labels[j].append(Y[i])
+                break
+
+    correctOccurences = 0
+    falseOccurences = 0
+    for j in range(K):
+        commonLabel, numOfOccurences = Counter(Labels[j]).most_common(1)[0]
+        indices = [i for i, x in enumerate(Labels[j]) if x != commonLabel]
+        correctOccurences += numOfOccurences
+        falseOccurences += len(indices)
+
+    return (falseOccurences / (falseOccurences + correctOccurences)) * 100
+
+trX, teX, trY, teY = mnist(ntrain=60000, ntest=10000, onehot=False)
+X = trX[0:1000]
+Y = trY[0:1000]
+# C, CostFunctionValues = Kmeans(X)
+# print(successRate(C, X, Y))
+# plt.plot(CostFunctionValues)
+# plt.show()
+# for j in range(K):
+#     plt.imshow(C[j]['mean'].reshape((28, 28)))
+#     plt.show()
+
+kmeans = KMeans(n_clusters=10)
+kmeans.fit(X)
+
+kmeansLabelDict = {}
+for element in kmeans.labels_:
+    kmeans
