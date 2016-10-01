@@ -16,19 +16,16 @@ def RandomlyClassifyDataBestMatch(X):
     for j in range(K):
         C[j] = {'points': [], 'mean': np.ndarray(784)}
 
-    C[0]['points'].append(X[1].tolist())
-    C[1]['points'].append(X[3].tolist())
-    C[2]['points'].append(X[5].tolist())
-    C[3]['points'].append(X[7].tolist())
-    C[4]['points'].append(X[2].tolist())
-    C[5]['points'].append(X[0].tolist())
-    C[6]['points'].append(X[13].tolist())
-    C[7]['points'].append(X[15].tolist())
-    C[8]['points'].append(X[17].tolist())
-    C[9]['points'].append(X[116].tolist())
-
-    for j in range(K):
-        C[j]['mean'] = np.average(C[j]['points'], axis=0)
+    C[0]['mean'] = X[1]
+    C[1]['mean'] = X[3]
+    C[2]['mean'] = X[5]
+    C[3]['mean'] = X[7]
+    C[4]['mean'] = X[2]
+    C[5]['mean'] = X[0]
+    C[6]['mean'] = X[13]
+    C[7]['mean'] = X[15]
+    C[8]['mean'] = X[17]
+    C[9]['mean'] = X[116]
 
     return C
 
@@ -64,7 +61,7 @@ def findGivenVectorInAllCentroid(C, vectorToLookFor):
 
     return indexToReturn
 
-def Kmeans(X):
+def Kmeans(X, Y):
     k_MaxAllowdExchanges = int(np.size(X, 0) * 0.02)
     C = RandomlyClassifyDataBestMatch(X)    # for best initialization
     # C = RandomlyClassifyData(X)           # for random initialization
@@ -73,21 +70,21 @@ def Kmeans(X):
 
     while numOfExchanges > k_MaxAllowdExchanges:
         numOfExchanges = 0
-
+        rightAnswer = 0
         # match all the points to the most compatible centroid
         for i in range(np.size(X, 0)):     # for each point
             distances = []
             for j in range(len(C)):  # check the match to any centroid
                 distances.append(distance.euclidean(X[i], C[j]['mean']))
-
             rightCentroidNumber = np.argmin(distances)
-
             wrongCentroidNumber = findGivenVectorInAllCentroid(C, X[i].tolist())
             if rightCentroidNumber != wrongCentroidNumber:
                 numOfExchanges += 1
                 if wrongCentroidNumber != -1:
                     C[wrongCentroidNumber]['points'].remove(X[i].tolist())
                 C[rightCentroidNumber]['points'].append(X[i].tolist())
+
+        print(rightAnswer)
 
         # rearrange the centroids
         for j in range(K):
@@ -129,8 +126,7 @@ def successRate(C, X, Y):
 trX, teX, trY, teY = mnist(ntrain=60000, ntest=10000, onehot=False)
 X = trX[0:200]
 Y = trY[0:200]
-C, CostFunctionValues = Kmeans(X)
-
+C, CostFunctionValues = Kmeans(X, Y)
 print(successRate(C, X, Y))
 plt.plot(CostFunctionValues)
 plt.show()
